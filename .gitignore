@@ -1,0 +1,11 @@
+__repo__
+.vscode
+frdmmcxa153
+CMakeLists.txt
+CMakePresets.json
+example.yml
+Kconfig
+mcux_include.json
+prj.conf
+debug
+.DS_Store
