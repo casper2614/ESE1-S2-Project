@@ -83,11 +83,49 @@ int main(void)
     SysTick_Config(48000);
     __enable_irq();
 
+    leds_init();
+    sw_init();
     serial_init(115200);
     lpuart2_init(9600);
 
     printf("GeovVenture Geocache\r\n");
     printf("%s build %s %s\r\n", TARGETSTR, __DATE__, __TIME__);
+
+    hm10_send("AT");
+    delay_ms(500);
+    hm10_receive();
+    printf("[RX] %s\r\n\r\n", rx_buffer);
+    rx_index = 0;
+    memset(rx_buffer, 0, sizeof(rx_buffer));
+
+    hm10_send("AT+RESET");
+    delay_ms(1500);
+    hm10_receive();
+    printf("[RX] %s\r\n\r\n", rx_buffer);
+    rx_index = 0;
+    memset(rx_buffer, 0, sizeof(rx_buffer));
+
+    hm10_send("AT+ROLE1");
+    delay_ms(500);
+    hm10_receive();
+    printf("[RX] %s\r\n\r\n", rx_buffer);
+    rx_index = 0;
+    memset(rx_buffer, 0, sizeof(rx_buffer));
+
+    hm10_send("AT+IMME1");
+    delay_ms(500);
+    hm10_receive();
+    printf("[RX] %s\r\n\r\n", rx_buffer);
+    rx_index = 0;
+    memset(rx_buffer, 0, sizeof(rx_buffer));
+
+    hm10_send("AT+VERR?");
+    delay_ms(1500);
+    hm10_receive();
+    printf("[RX] %s\r\n\r\n", rx_buffer);
+    rx_index = 0;
+    memset(rx_buffer, 0, sizeof(rx_buffer));
+    printf("Initialisatie klaar. Start scannen...\r\n");
 
     while (1)
     {
@@ -98,7 +136,7 @@ int main(void)
             rx_index = 0;
             memset(rx_buffer, 0, sizeof(rx_buffer));
             hm10_send("AT+DISI?");
-            // de delay hier moet nog verbetered worden en vervangen worden door een timer Floris zij dat die het zou doen.
+            // de delay hier hoeft NIET weggewerkt te worden, de code die hierna komt kan niet uitgevoerd worden totdat hm10_receive af is.
             for (uint32_t t = 0; t < 4000; t++) // Wacht 4 seconde
             {
                 hm10_receive();
