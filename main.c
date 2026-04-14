@@ -103,13 +103,16 @@ static void hm10_receive(void)
     }
 }
 // -----------------------------------------------------------------------------
-// de UUID van iBeacon in kamers
-#define IBEACON_SOLDEERUIMTE "74278BDAB64445028F0C720EAF059935"
-#define IBEACON_Bjorn "11111111111111111111111111111111"
-//-----------------------------------------------------------------------------
+// de major en minor nummers van iBeacon in kamers
 
+//-----------------------------------------------------------------------------
+typedef struct{
+    int major;
+    int minor;
+} majorMinor_t;
 int KAMERRUIMTE = 1;
-char *IBEACON_UUID[] = {IBEACON_SOLDEERUIMTE, IBEACON_Bjorn, "2", "3", "4", "5", "6", "7", "8"};
+// de structs in de array zijn placeholders, vervang deze met namen van ruimtes
+majorMinor_t IBEACON_MM[] = { {1,0}, {1,1}, {1,2}, {1,3}, {1,4}, {1,5}, {1,6}, {1,7}, {1,8}};
 // Match is de specefieke disc die we nodig hebben
 char disc[512];
 int signal;
@@ -118,7 +121,7 @@ static int hm10_Signal_Sterkte(void)
     char rx_copy[RX_BUFFER_SIZE];
     strncpy(rx_copy, rx_buffer, RX_BUFFER_SIZE);
     
-    char *disc = strstr(rx_copy, IBEACON_UUID[KAMERRUIMTE]);
+    char *disc = strstr(rx_copy, IBEACON_MM[KAMERRUIMTE]);
     if (disc == NULL) 
     {
         return 0; // de iBeacon is niet gevonden
@@ -219,7 +222,7 @@ int main(void)
             rx_index = 0;
             memset(rx_buffer, 0, sizeof(rx_buffer));
             hm10_send("AT+DISI?");
-            // de delay hier moet nog verbetered worden en vervangen worden door een timer Floris zij dat die het zou doen.
+            // de delay hier hoeft NIET weggewerkt te worden, de code die hierna komt kan niet uitgevoerd worden totdat hm10_receive af is.
             for (uint32_t t = 0; t < 4000; t++) // Wacht 4 seconde
             {
                 hm10_receive();
