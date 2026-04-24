@@ -104,13 +104,13 @@ static void hm10_receive(void)
 }
 // -----------------------------------------------------------------------------
 // de major en minor nummers van iBeacon in kamers
-
+majorminor_t testbeacon = {1111, 2222};
 //-----------------------------------------------------------------------------
 typedef struct{
-    int major;
-    int minor;
+    char major[];
+    char minor[];
 } majorMinor_t;
-int KAMERRUIMTE = 1;
+int KAMERRUIMTE = 0;
 // de structs in de array zijn placeholders, vervang deze met namen van ruimtes
 majorMinor_t IBEACON_MM[] = { {1,0}, {1,1}, {1,2}, {1,3}, {1,4}, {1,5}, {1,6}, {1,7}, {1,8}};
 // Match is de specefieke disc die we nodig hebben
@@ -121,7 +121,12 @@ static int hm10_Signal_Sterkte(void)
     char rx_copy[RX_BUFFER_SIZE];
     strncpy(rx_copy, rx_buffer, RX_BUFFER_SIZE);
     
-    char *disc = strstr(rx_copy, IBEACON_MM[KAMERRUIMTE]);
+    char *disc = strstr(rx_copy, IBEACON_MM[KAMERRUIMTE].major);
+    if (disc == NULL) 
+    {
+        return 0; // de iBeacon is niet gevonden
+    }
+    *disc = strstr(disc, IBEACON_MM[KAMERRUIMTE].minor);
     if (disc == NULL) 
     {
         return 0; // de iBeacon is niet gevonden
