@@ -1,12 +1,64 @@
-#include <stdlib.h>
+/*! ***************************************************************************
+ *
+ * \brief     Main application
+ * \file      main.c
+ * \author    Hugo Arends
+ * \date      February 2024
+ *
+ * \see       NXP. (2024). MCX A153, A152, A143, A142 Reference Manual. Rev. 4,
+ *            01/2024. From:
+ *            https://www.nxp.com/docs/en/reference-manual/MCXAP64M96FS3RM.pdf
+ *
+ * \copyright 2024 HAN University of Applied Sciences. All Rights Reserved.
+ *            \n\n
+ *            Permission is hereby granted, free of charge, to any person
+ *            obtaining a copy of this software and associated documentation
+ *            files (the "Software"), to deal in the Software without
+ *            restriction, including without limitation the rights to use,
+ *            copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *            copies of the Software, and to permit persons to whom the
+ *            Software is furnished to do so, subject to the following
+ *            conditions:
+ *            \n\n
+ *            The above copyright notice and this permission notice shall be
+ *            included in all copies or substantial portions of the Software.
+ *            \n\n
+ *            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *            EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *            OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *            NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *            HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *            WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *            FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *            OTHER DEALINGS IN THE SOFTWARE.
+ *
+
+    printf("1. Verify that after microcontroller reset a message appears\r\n" \
+        "   in the terminal application.\r\n" \
+        "2. Verify that typing the characters 'r', 'g' and 'b' in the \r\n" \
+        "   terminal application toggles the corresponding RBG LED.\r\n" \
+        "3. Verify that pressing SW2 and SW3 toggles the green and red\r\n" \
+        "   LED on and off respectively, and prints \"SW2\" and \"SW3\" \r\n" \
+        "   in the terminal application.\r\n");
+
+    
+*/
+/******************************************************************************/
+#include <MCXA153.h>
 #include <board.h>
 #include <stdio.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "leds.h"
+#include "switches.h"
 #include "serial.h"
 #include "lpuart2.h"
 #include "math.h"
+#include <stdlib.h>
+// Ontvangst buffer
+#define RX_BUFFER_SIZE 512
+static char rx_buffer[RX_BUFFER_SIZE];
+static uint16_t rx_index = 0;
 
 // -----------------------------------------------------------------------------
 // Local type definitions
@@ -22,11 +74,45 @@
 // -----------------------------------------------------------------------------
 static volatile uint32_t ms = 0;
 int delay = 4000;
+static void delay_ms(uint32_t ms)
+{
+    for (uint32_t i = 0; i < ms * 12000; i++)
+    {
+        __asm("nop");
+    }
+}
 
-
-
-int KAMERRUIMTE = 1;
-char *IBEACON_UUID[] = {IBEACON_SOLDEERUIMTE, IBEACON_Bjorn, "2", "3", "4", "5", "6", "7", "8"};
+static void hm10_send(const char *cmd)
+{
+    for (uint16_t i = 0; cmd[i] != '\0'; i++)
+    {
+        lpuart2_putchar((uint8_t)cmd[i]);
+    }
+    printf("[TX] %s\r\n", cmd);
+}
+static void hm10_receive(void)
+{
+    while (lpuart2_rxcnt() > 0)
+    {
+        char c = (char)lpuart2_getchar();
+        if (rx_index < RX_BUFFER_SIZE - 1)
+        {
+            rx_buffer[rx_index++] = c;
+            rx_buffer[rx_index] = '\0';
+        }
+    }
+}
+// -----------------------------------------------------------------------------
+// de major en minor nummers van iBeacon in kamers
+majorminor_t testbeacon = {1111, 2222};
+//-----------------------------------------------------------------------------
+typedef struct{
+    char major[];
+    char minor[];
+} majorMinor_t;
+int KAMERRUIMTE = 0;
+// de structs in de array zijn placeholders, vervang deze met namen van ruimtes
+majorMinor_t IBEACON_MM[] = { {1,0}, {1,1}, {1,2}, {1,3}, {1,4}, {1,5}, {1,6}, {1,7}, {1,8}};
 // Match is de specefieke disc die we nodig hebben
 char disc[512];
 int signal;
@@ -35,7 +121,12 @@ static int hm10_Signal_Sterkte(void)
     char rx_copy[RX_BUFFER_SIZE];
     strncpy(rx_copy, rx_buffer, RX_BUFFER_SIZE);
     
-    char *disc = strstr(rx_copy, IBEACON_UUID[KAMERRUIMTE]);
+    char *disc = strstr(rx_copy, IBEACON_MM[KAMERRUIMTE].major);
+    if (disc == NULL) 
+    {
+        return 0; // de iBeacon is niet gevonden
+    }
+    *disc = strstr(disc, IBEACON_MM[KAMERRUIMTE].minor);
     if (disc == NULL) 
     {
         return 0; // de iBeacon is niet gevonden
@@ -88,7 +179,7 @@ int main(void)
     serial_init(115200);
     lpuart2_init(9600);
 
-    printf("GeovVenture Geocache\r\n");
+    printf("Template example\r\n");
     printf("%s build %s %s\r\n", TARGETSTR, __DATE__, __TIME__);
 
     hm10_send("AT");
