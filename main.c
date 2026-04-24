@@ -104,15 +104,31 @@ static void hm10_receive(void)
 }
 // -----------------------------------------------------------------------------
 // de major en minor nummers van iBeacon in kamers
-majorminor_t testbeacon = {1111, 2222};
-//-----------------------------------------------------------------------------
 typedef struct{
-    char major[];
-    char minor[];
+    char major[5];
+    char minor[5];
 } majorMinor_t;
+/*const majorMinor_t BEACON_SOLDEERRUIMTE = {"0AEA", "0037"};
+const majorMinor_t BEACON_COMPONENTENBALIE = {"0AEA", "0026"};
+const majorMinor_t BEACON_MUUR = {"0AEA", "0032"};*/
+const majorMinor_t RUIMTE_1 = {"0B01", "0004"};
+const majorMinor_t RUIMTE_2 = {"0B01", "0005"};
+const majorMinor_t RUIMTE_3 = {"0B01", "0006"};
+const majorMinor_t RUIMTE_4 = {"0B01", "0007"};
+const majorMinor_t RUIMTE_5 = {"0B01", "0008"};
+const majorMinor_t RUIMTE_6 = {"0B01", "0009"};
+const majorMinor_t RUIMTE_7 = {"0B01", "000A"};
+// major nummer van de ibeacons beneden is 0AEA
+// minor nummer muur beneden 0x0032
+// minor nummer componentenbalie 0x0026
+// minor nummer soldeerruimte 0x0037
+// major nummer van de locatie die we bezocht hebben is 0b01
+// minor nummers van die beacons zijn, 0004, 0005, 0006, 0007, 0008, 0009, 000A. (volgorde staat nog niet vast)
+//-----------------------------------------------------------------------------
+
 int KAMERRUIMTE = 0;
 // de structs in de array zijn placeholders, vervang deze met namen van ruimtes
-majorMinor_t IBEACON_MM[] = { {1,0}, {1,1}, {1,2}, {1,3}, {1,4}, {1,5}, {1,6}, {1,7}, {1,8}};
+majorMinor_t IBEACON_MM[] = {RUIMTE_1, RUIMTE_2, RUIMTE_3, RUIMTE_4, RUIMTE_5, RUIMTE_6, RUIMTE_7};
 // Match is de specefieke disc die we nodig hebben
 char disc[512];
 int signal;
@@ -124,17 +140,21 @@ static int hm10_Signal_Sterkte(void)
     char *disc = strstr(rx_copy, IBEACON_MM[KAMERRUIMTE].major);
     if (disc == NULL) 
     {
+        printf("Major niet gevonden");
         return 0; // de iBeacon is niet gevonden
     }
-    *disc = strstr(disc, IBEACON_MM[KAMERRUIMTE].minor);
+    printf("%s\n", disc);
+    disc = strstr(disc, IBEACON_MM[KAMERRUIMTE].minor);
     if (disc == NULL) 
     {
+        printf("Minor  niet gevonden");
         return 0; // de iBeacon is niet gevonden
     }
+    printf("%s\n", disc);
 
 
     char *p = disc;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
         p = strchr(p, ':');
         if (p == NULL) {
             return 0; // onverwacht formaat
