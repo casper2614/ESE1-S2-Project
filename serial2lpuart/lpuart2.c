@@ -49,8 +49,10 @@
 // -----------------------------------------------------------------------------
 static fifo_t tx;
 static fifo_t rx;
-static uint8_t tx_buffer[1024];
-static uint8_t rx_buffer[1024];
+static uint8_t tx_buffer[2048];
+static uint8_t rx_buffer[2048];
+volatile uint8_t ready = 0;
+
 
 // -----------------------------------------------------------------------------
 // Local function implementation
@@ -195,6 +197,10 @@ void LPUART2_IRQHandler(void)
     {
         // Read data
         c = (uint8_t)(LPUART2->DATA);
+
+        if (c == '\n') {
+            ready = 1;
+        }
 
         // Put in receive FIFO
         if(!f_push(&rx, &c))

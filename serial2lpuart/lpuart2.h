@@ -39,4 +39,6 @@ void lpuart2_putchar(const int data);
 int lpuart2_getchar(void);
 uint32_t lpuart2_rxcnt(void);
 
-#endif  // LPUART2_H
+extern volatile uint8_t ready;
+
+#endif // LPUART2_H
